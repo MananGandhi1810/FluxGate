@@ -42,17 +42,41 @@ const incomingWebhookHandler = async (req, res) => {
         });
     }
 
-    // Logic to build container: TODO
-    
-    const commitId = req.body.head_commit.id
-    const commitMessage = req.body.head_commit.message
-    const committer = req.body.head_commit.committer.name
+    // Check if branch name matches
+    if (req.body.ref.split("/").pop() !== project.branchName) {
+        return res.json({
+            success: true,
+            message: "Webhook received",
+            data: null,
+        });
+    }
 
-    console.log("Incoming Webhook for project", projectId);
-    console.log("Commit Details");
-    console.log("Commit ID", commitId);
-    console.log("Commit Message", commitMessage);
-    console.log("Committer", committer);
+    // Check if commit exists
+    if (!req.body.commits || req.body.commits.length === 0) {
+        return res.json({
+            success: true,
+            message: "Webhook received",
+            data: null,
+        });
+    }
+
+    // Check if changes are in the base directory
+    const changes = req.body.commits
+        .map((commit) => commit.added.concat(commit.modified, commit.removed))
+        .flat();
+    if (!changes.some((change) => change.startsWith(project.baseDirectory))) {
+        console.log("Changes", changes);
+        return res.json({
+            success: true,
+            message: "Webhook received",
+            data: null,
+        });
+    }
+
+    // Build the project: Manan TODO - Use Redis Queue to asynchronously build the project?
+    console.log("Incoming Webhook for Project", projectId);
+    console.log("Changes:", changes);
+    console.log("Branch:", req.body.ref.split("/").pop());
 
     return res.json({
         success: true,

@@ -60,7 +60,7 @@ model Project {
     createdAt     DateTime         @default(now())
     lastDeploy    DateTime?
     branchName    String?          @default("main")
-    baseDirectory String?          @default(".")
+    baseDirectory String?          @default("")
     webhookId     String?          @unique
     domainName    String?          @unique
     User          User?            @relation(fields: [userId], references: [id])
