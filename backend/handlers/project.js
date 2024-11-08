@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 // import { sendQueueMessage } from "../utils/queue-manager.js";
 import { createWebhook } from "../utils/github-api.js";
+import { chatWithAgent } from "../utils/llm-agent.js";
 
 const prisma = new PrismaClient();
 
@@ -95,4 +96,32 @@ const newProjectHandler = async (req, res) => {
     });
 };
 
-export { newProjectHandler };
+const newProjectWithChatHandler = async (req, res) => {
+    const { prompt, history } = req.body;
+    if (!prompt) {
+        return res.status(400).json({
+            success: false,
+            message: "Prompt is required",
+            data: null,
+        });
+    }
+    const result = await chatWithAgent(req.user.ghAccessToken, prompt, history);
+    console.log(result);
+    if (!result) {
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred",
+            data: null,
+        });
+    }
+    console.log(result.response.text());
+    return res.json({
+        success: true,
+        message: "Chat response received",
+        data: {
+            response: result.response.text(),
+        },
+    });
+};
+
+export { newProjectHandler, newProjectWithChatHandler };

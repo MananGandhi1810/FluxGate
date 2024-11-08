@@ -1,7 +1,8 @@
 import axios from "axios";
+import { exists, get, set } from "./keyvalue-db.js";
 
 const ghRepoRegex =
-    /^https?:\/\/(www\.)?github.com\/(?<owner>[\w.-]+)\/(?<name>[\w.-]+)/;
+    /https?:\/\/(www\.)?github.com\/(?<owner>[\w.-]+)\/(?<name>[\w.-]+)/;
 
 const getAccessToken = async (code) => {
     return await axios.post(
@@ -65,4 +66,35 @@ const createWebhook = async (token, githubUrl) => {
     );
 };
 
-export { getAccessToken, getUserDetails, getUserEmails, createWebhook };
+const getFileTree = async (token, githubUrl, branchName = "main") => {
+    const match = githubUrl.match(ghRepoRegex);
+    if (!match || !(match.groups?.owner && match.groups?.name)) return null;
+    const repoName = `${match.groups.owner}/${match.groups.name}`;
+    if (await exists(`file-tree:${repoName}/${branchName}`)) {
+        return await get(`file-tree:${repoName}/${branchName}`);
+    }
+    const result = await axios.get(
+        `https://api.github.com/repos/${repoName}/git/trees/${branchName}?recursive=true`,
+        {
+            headers: {
+                Authorization: "Bearer " + token,
+                "X-OAuth-Scopes": "repo, user",
+                "X-Accepted-OAuth-Scopes": "user",
+            },
+            validateStatus: false,
+        },
+    );
+    if (result.status >= 400) {
+        return null;
+    }
+    set(`file-tree:${repoName}/${branchName}`, result.data.tree, 10 * 60);
+    return result.data.tree;
+};
+
+export {
+    getAccessToken,
+    getUserDetails,
+    getUserEmails,
+    createWebhook,
+    getFileTree,
+};
