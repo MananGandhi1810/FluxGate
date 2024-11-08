@@ -1,0 +1,27 @@
+{
+    "name": "hackthisfall-24",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "nodemon ./bin/www",
+        "start": "node ./bin/www"
+    },
+    "dependencies": {
+        "@prisma/client": "^5.22.0",
+        "axios": "^1.7.7",
+        "cookie-parser": "~1.4.4",
+        "debug": "~2.6.9",
+        "dockerode": "^4.0.2",
+        "dotenv": "^16.4.5",
+        "express": "~4.16.1",
+        "http-errors": "~1.6.3",
+        "jsonwebtoken": "^9.0.2",
+        "morgan": "~1.9.1",
+        "node-redis": "^0.1.7"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.7",
+        "prisma": "^5.22.0"
+    }
+}
