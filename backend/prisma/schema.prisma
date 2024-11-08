@@ -61,7 +61,7 @@ model Project {
     lastDeploy    DateTime?
     branchName    String?          @default("main")
     baseDirectory String?          @default(".")
-    webhookId     Int?
+    webhookId     String?          @unique
     domainName    String?          @unique
     User          User?            @relation(fields: [userId], references: [id])
     userId        String?

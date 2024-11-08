@@ -18,6 +18,8 @@ const frameworks = [
 
 const newProjectHandler = async (req, res) => {
     const { name, description, githubUrl, envSecrets, framework } = req.body;
+
+    // Check if required fields are present
     if (!name || !githubUrl || !framework) {
         return res.status(400).json({
             success: false,
@@ -25,6 +27,8 @@ const newProjectHandler = async (req, res) => {
             data: null,
         });
     }
+
+    // Check if framework is valid
     if (!frameworks.includes(framework)) {
         return res.status(400).json({
             success: false,
@@ -32,42 +36,58 @@ const newProjectHandler = async (req, res) => {
             data: null,
         });
     }
-    const processedEnvSecrets = envSecrets.map((secret) => {
-        if (
-            secret == undefined ||
-            secret.key == undefined ||
-            secret.value == undefined
-        ) {
-            return;
-        }
-        return { key: secret.key, value: secret.value };
-    });
+
+    // Process env secrets if present
+    let processedEnvSecrets;
+    if (envSecrets && !Array.isArray(envSecrets)) {
+        processedEnvSecrets = envSecrets.map((secret) => {
+            if (
+                secret == undefined ||
+                secret.key == undefined ||
+                secret.value == undefined
+            ) {
+                return;
+            }
+            return { key: secret.key, value: secret.value };
+        });
+    } else {
+        processedEnvSecrets = [];
+    }
+    
+    // Generate a unique project id
+    let id;
+    do {
+        id = (Math.floor(Math.random() * 1000000)).toString();
+    } while (
+        await prisma.project.findUnique({
+            where: {
+                id,
+            },
+        })
+    );
+
+    // Create a webhook for the repo
     const webhookRequest = await createWebhook(
+        id,
         req.user.ghAccessToken,
         githubUrl,
     );
-    if (!webhookRequest) {
+
+    // Check if webhook creation was successful
+    if (!webhookRequest || webhookRequest.data.id == undefined) {
         return res.status(400).json({
             success: false,
             message: "GitHub Repo is invalid or cannot be accessed",
             data: null,
         });
     }
-    console.log(webhookRequest.status);
-    console.log(webhookRequest.data);
-    console.log(webhookRequest.headers);
-    const webhookId = webhookRequest.data.id;
-    if (webhookRequest.status >= 400) {
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-            data: null,
-        });
-    }
+    
+    // Create the project
     var project;
     try {
         project = await prisma.project.create({
             data: {
+                id,
                 name,
                 description,
                 framework,
@@ -76,7 +96,7 @@ const newProjectHandler = async (req, res) => {
                 },
                 framework,
                 githubUrl,
-                webhookId,
+                webhookId: (webhookRequest.data.id).toString(),
             },
         });
     } catch (e) {
