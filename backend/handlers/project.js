@@ -130,14 +130,12 @@ const newProjectWithChatHandler = async (req, res) => {
     const processedHistory = history.map((message) => {
         return { role: message.role, parts: message.parts };
     });
-    console.log(processedHistory);
-    console.log(JSON.stringify(history));
     const result = await chatWithAgent(
         req.user.ghAccessToken,
         prompt,
         processedHistory,
     );
-    console.log(result);
+    console.log(result.response.text());
     if (!result) {
         return res.status(500).json({
             success: false,
@@ -155,7 +153,6 @@ const newProjectWithChatHandler = async (req, res) => {
             data: null,
         });
     }
-    console.log(aiResponse);
     if (aiResponse.systemInfo != null) {
         var project;
         let id;
@@ -188,6 +185,7 @@ const newProjectWithChatHandler = async (req, res) => {
                     description: aiResponse.systemInfo.description,
                     framework: aiResponse.systemInfo.framework,
                     githubUrl: aiResponse.systemInfo.githubUrl,
+                    baseDirectory: aiResponse.systemInfo.baseDirectory,
                     webhookId: webhookRequest.data.id.toString(),
                     userId: req.user.id,
                 },
