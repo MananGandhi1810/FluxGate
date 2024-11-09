@@ -9,7 +9,9 @@ Team FooBar's submission for [HackThisFall](https://hackathon.hackthisfall.tech/
 -   PostgreSQL
 -   Redis
 -   Docker
--   Gemini Flash 1.5
+-   Gemini 1.5 Flash
+-   GitHub API
+-   Resend
 
 ## Members
 
