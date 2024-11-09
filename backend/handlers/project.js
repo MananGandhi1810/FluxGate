@@ -2,8 +2,10 @@ import { PrismaClient } from "@prisma/client";
 import { createWebhook } from "../utils/github-api.js";
 import { chatWithAgent } from "../utils/llm-agent.js";
 import removeMd from "remove-markdown";
+import Docker from "dockerode";
 
 const prisma = new PrismaClient();
+const docker = new Docker();
 
 const frameworks = [
     "Node",
@@ -246,9 +248,93 @@ const getProjectByIdHandler = async (req, res) => {
     });
 };
 
+const startProjectHandler = async (req, res) => {
+    const { projectId } = req.params;
+    if (!projectId) {
+        return res.status(400).json({
+            success: false,
+            message: "Project Id is required",
+            data: null,
+        });
+    }
+    const project = await prisma.project.findUnique({
+        where: {
+            id: projectId,
+        },
+        select: {
+            containerId: true,
+        },
+    });
+    if (!project) {
+        return res.status(404).json({
+            success: false,
+            message: "Project not found",
+            data: null,
+        });
+    }
+    try {
+        const container = docker.getContainer(project.containerId);
+        container.start();
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            message: "Could not start project",
+            data: null,
+        });
+    }
+    res.json({
+        success: true,
+        message: "Project started succesfully",
+        data: null,
+    });
+};
+
+const stopProjectHandler = async (req, res) => {
+    const { projectId } = req.params;
+    if (!projectId) {
+        return res.status(400).json({
+            success: false,
+            message: "Project Id is required",
+            data: null,
+        });
+    }
+    const project = await prisma.project.findUnique({
+        where: {
+            id: projectId,
+        },
+        select: {
+            containerId: true,
+        },
+    });
+    if (!project) {
+        return res.status(404).json({
+            success: false,
+            message: "Project not found",
+            data: null,
+        });
+    }
+    try {
+        const container = docker.getContainer(project.containerId);
+        container.kill();
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            message: "Could not stop project",
+            data: null,
+        });
+    }
+    res.json({
+        success: true,
+        message: "Project stopped succesfully",
+        data: null,
+    });
+};
+
 export {
     newProjectHandler,
     newProjectWithChatHandler,
     getAllProjectsHandler,
     getProjectByIdHandler,
+    startProjectHandler,
+    stopProjectHandler,
 };
