@@ -49,7 +49,7 @@ Respond in the following format:
         "framework": "" || null,
         "baseDirectory": "" || null,
         "branchName": "" || null
-    }
+    } || null
 }
 DO NOT RESPOND IN ANY OTHER FORMAT
 DO NOT USE MARKDOWN
