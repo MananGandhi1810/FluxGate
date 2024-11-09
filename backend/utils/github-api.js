@@ -42,7 +42,6 @@ const getUserEmails = async (token) => {
 const createWebhook = async (id, token, githubUrl) => {
     const match = githubUrl.match(ghRepoRegex);
     if (!match || !(match.groups?.owner && match.groups?.name)) return null;
-    
     return await axios.post(
         `https://api.github.com/repos/${match.groups.owner}/${match.groups.name}/hooks`,
         {

@@ -50,7 +50,7 @@ model Project {
     id            String           @id @default(cuid())
     name          String
     description   String?
-    githubUrl     String?         
+    githubUrl     String?
     envSecrets    EnvSecrets[]
     status        Status           @default(DOWN)
     framework     ProjectFramework
@@ -63,8 +63,8 @@ model Project {
     baseDirectory String?          @default("")
     webhookId     String?          @unique
     domainName    String?          @unique
-    User          User?            @relation(fields: [userId], references: [id])
-    userId        String?
+    User          User             @relation(fields: [userId], references: [id])
+    userId        String
     dockerfile    String?
 
     @@map("projects")

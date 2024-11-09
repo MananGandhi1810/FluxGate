@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { sendQueueMessage } from "../utils/queue-manager.js";
 
 const prisma = new PrismaClient();
 
@@ -64,7 +65,13 @@ const incomingWebhookHandler = async (req, res) => {
     const changes = req.body.commits
         .map((commit) => commit.added.concat(commit.modified, commit.removed))
         .flat();
-    if (!changes.some((change) => change.startsWith(project.baseDirectory))) {
+    if (
+        !changes.some((change) =>
+            change.startsWith(
+                project.baseDirectory == "." ? "" : project.baseDirectory,
+            ),
+        )
+    ) {
         console.log("Changes", changes);
         return res.json({
             success: true,
@@ -73,10 +80,44 @@ const incomingWebhookHandler = async (req, res) => {
         });
     }
 
+    const branchName = req.body.ref.split("/").pop();
+
     // Build the project: Manan TODO - Use Redis Queue to asynchronously build the project?
     console.log("Incoming Webhook for Project", projectId);
     console.log("Changes:", changes);
-    console.log("Branch:", req.body.ref.split("/").pop());
+    console.log("Branch:", branchName);
+
+    if (branchName != project.branchName) {
+        return res.json({
+            success: true,
+            message: "Webhook received but not building",
+            data: null,
+        });
+    }
+
+    if (req.body.commits.length == 0) {
+        return res.json({
+            success: true,
+            message: "Webhook received but not building",
+            data: null,
+        });
+    }
+
+    const latestCommit = req.body.commits
+        .sort((a, b) => {
+            return new Date(a.timestamp) - new Date(b.timestamp);
+        })
+        .at(-1).id;
+
+    sendQueueMessage(
+        "new-build",
+        JSON.stringify({
+            projectId,
+            branchName: branchName,
+            commitHash: latestCommit,
+            userId: project.userId,
+        }),
+    );
 
     return res.json({
         success: true,

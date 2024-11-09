@@ -1,4 +1,4 @@
-import redis from "redis";
+import redis from "@node-redis/client";
 
 var isConnected = false;
 
@@ -26,6 +26,7 @@ const sendQueueMessage = async (topic, message) => {
     }
     try {
         publisher.publish(topic, message);
+        console.log(`Published ${message} to channel ${topic}`);
     } catch (e) {
         console.log("Couldn't send message to Redis Pub/Sub");
         console.log(e);

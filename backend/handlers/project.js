@@ -53,11 +53,11 @@ const newProjectHandler = async (req, res) => {
     } else {
         processedEnvSecrets = [];
     }
-    
+
     // Generate a unique project id
     let id;
     do {
-        id = (Math.floor(Math.random() * 1000000)).toString();
+        id = Math.floor(Math.random() * 1000000).toString();
     } while (
         await prisma.project.findUnique({
             where: {
@@ -81,7 +81,7 @@ const newProjectHandler = async (req, res) => {
             data: null,
         });
     }
-    
+
     // Create the project
     var project;
     try {
@@ -91,12 +91,13 @@ const newProjectHandler = async (req, res) => {
                 name,
                 description,
                 framework,
+                framework,
+                githubUrl,
+                webhookId: webhookRequest.data.id.toString(),
+                userId: req.user.id,
                 envSecrets: {
                     create: processedEnvSecrets,
                 },
-                framework,
-                githubUrl,
-                webhookId: (webhookRequest.data.id).toString(),
             },
         });
     } catch (e) {
