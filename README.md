@@ -9,7 +9,6 @@ Team FooBar's submission for [HackThisFall](https://hackathon.hackthisfall.tech/
 -   PostgreSQL
 -   Redis
 -   Docker
--   Prisma ORM
 
 ## Members
 
