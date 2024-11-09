@@ -10,15 +10,33 @@ const stripAnsi = (str) => str.replace(/\x1b\[[0-9;]*m/g, '');
 const logContainerData = async (containerId, projectId) => {
     const container = docker.getContainer(containerId);
     if (!container) return;
+
+    const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { containerLogs: true },
+    });
+    if (project && project.containerLogs) {
+        sendMessage(projectId, "log", project.containerLogs);
+    }
+
     container.logs(
         { stdout: true, stderr: true, follow: true },
         function (err, stream) {
-            if (!stream) {
-                return;
-            }
-            stream.on("data", (data) => {
+            if (!stream) return;
+
+            stream.on("data", async (data) => {
                 const cleanData = stripAnsi(data.toString());
+                
                 sendMessage(projectId, "log", cleanData);
+
+                await prisma.project.update({
+                    where: { id: projectId },
+                    data: {
+                        containerLogs: {
+                            concat: cleanData,
+                        },
+                    },
+                });
             });
             stream.on("error", (e) => {
                 console.error(e);
@@ -33,9 +51,7 @@ const logContainerData = async (containerId, projectId) => {
 const logAllContainers = async () => {
     const projects = await prisma.project.findMany({
         where: {
-            containerId: {
-                not: null,
-            },
+            containerId: { not: null },
         },
         select: {
             id: true,

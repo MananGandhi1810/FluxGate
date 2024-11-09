@@ -51,6 +51,7 @@ model Project {
     deployCommit  String?
     containerId   String?          @unique
     containerPort String?
+    containerLogs String?
     createdAt     DateTime         @default(now())
     lastDeploy    DateTime?
     branchName    String?          @default("main")
