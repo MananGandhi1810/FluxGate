@@ -24,7 +24,7 @@ export default function TokenPage() {
             
           }
         );
-        setAccessToken(response.data.accessToken);
+        setAccessToken(response.data.data.accessToken);
       } catch (err) {
         console.error("Error retrieving access token:", err);
         setError("Failed to retrieve access token");
