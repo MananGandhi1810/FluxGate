@@ -1,11 +1,14 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
+import CORS from "cors";
 
 import authRouter from "./routes/auth.js";
 import projectRouter from "./routes/project.js";
 
 var app = express();
+
+app.use(CORS());
 
 app.use(logger("dev"));
 app.use(express.json());

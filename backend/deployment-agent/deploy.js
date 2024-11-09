@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import Dockerode from "dockerode";
 import Docker from "dockerode";
 import path from "path";
+import { logContainerData } from "../utils/container-logs.js";
 
 const docker = new Docker();
 const prisma = new PrismaClient();
@@ -85,12 +85,7 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
         },
     });
     container.start();
-    container.attach(
-        { stream: true, stdout: true, stderr: true },
-        function (err, stream) {
-            stream.pipe(process.stdout);
-        },
-    );
+    logContainerData(container.id, project.id);
     const containerInspection = await container.inspect();
     console.log(containerInspection);
     var containerStatus = containerInspection.State.Status;
