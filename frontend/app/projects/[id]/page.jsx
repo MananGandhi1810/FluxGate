@@ -224,9 +224,6 @@ export default function ProjectDetails() {
                         {projectData.deployCommit}
                     </p>
                     <p>
-                        <strong>Webhook ID:</strong> {projectData.webhookId}
-                    </p>
-                    <p>
                         <strong>Domain Name:</strong>{" "}
                         {projectData.domainName || "Not set"}
                     </p>
