@@ -4,7 +4,6 @@ import Docker from "dockerode";
 import path from "path";
 
 const docker = new Docker();
-const dockerode = new Dockerode();
 const prisma = new PrismaClient();
 
 const ghRepoRegex =
@@ -39,6 +38,7 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
                 repoUrl: `https://${project.User.ghAccessToken}@github.com/${match.groups.owner}/${match.groups.name}`,
                 branch: branchName,
                 commitHash: commitHash,
+                dir: project.baseDirectory,
             },
             t: imageTag,
         },
