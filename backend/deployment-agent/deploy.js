@@ -58,6 +58,7 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
                 } catch (e) {}
             });
             buildStream.on("end", () => resolve());
+            buildStream.on("error", (e) => reject(buildOutput.error));
         });
     } catch (e) {
         await prisma.project.update({
