@@ -9,3 +9,9 @@ Team FooBar's submission for HackThisFall 2024. This is a self hostable deployme
 -   PostgreSQL
 -   Redis
 -   Docker
+
+## Members
+
+-   [Manan Gandhi](https://github.com/MananGandhi1810)
+-   [Adith Ramakrishna](https://github.com/itsSpirax)
+-   [Naitik Lodha](https://github.com/naitiklodha/)
