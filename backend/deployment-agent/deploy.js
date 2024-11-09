@@ -116,9 +116,19 @@ ${e}
             await prevContainer.remove();
         } catch (e) {}
     }
-    const projectState = await prisma.project.update({
+    await prisma.project.update({
         where: { id: projectId },
         data: containerDetails,
+    });
+
+    const containerPortBindings = containerInspection.NetworkSettings.Ports['3000/tcp'];
+    const hostPort = containerPortBindings ? containerPortBindings[0].HostPort : null;
+    
+    await prisma.project.update({
+        where: { id: projectId },
+        data: {
+            containerPort: hostPort,
+        },
     });
 };
 
