@@ -66,6 +66,7 @@ const incomingWebhookHandler = async (req, res) => {
         .map((commit) => commit.added.concat(commit.modified, commit.removed))
         .flat();
     if (
+        !!project.baseDirectory &&
         !changes.some((change) =>
             change.startsWith(
                 project.baseDirectory == "." ? "" : project.baseDirectory,
