@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-// import { sendQueueMessage } from "../utils/queue-manager.js";
 import { createWebhook } from "../utils/github-api.js";
 import { chatWithAgent } from "../utils/llm-agent.js";
+import removeMd from "remove-markdown";
 
 const prisma = new PrismaClient();
 
@@ -91,7 +91,6 @@ const newProjectHandler = async (req, res) => {
                 name,
                 description,
                 framework,
-                framework,
                 githubUrl,
                 webhookId: webhookRequest.data.id.toString(),
                 userId: req.user.id,
@@ -135,12 +134,67 @@ const newProjectWithChatHandler = async (req, res) => {
             data: null,
         });
     }
-    console.log(result.response.text());
+    var aiResponse;
+    try {
+        aiResponse = JSON.parse(removeMd(result.response.text()));
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred",
+            data: null,
+        });
+    }
+    console.log(aiResponse);
+    if (aiResponse.systemInfo != null) {
+        var project;
+        let id;
+        do {
+            id = Math.floor(Math.random() * 1000000).toString();
+        } while (
+            await prisma.project.findUnique({
+                where: {
+                    id,
+                },
+            })
+        );
+        const webhookRequest = await createWebhook(
+            id,
+            req.user.ghAccessToken,
+            aiResponse.systemInfo.githubUrl,
+        );
+        if (!webhookRequest || webhookRequest.data.id == undefined) {
+            return res.status(400).json({
+                success: false,
+                message: "GitHub Repo is invalid or cannot be accessed",
+                data: null,
+            });
+        }
+        try {
+            project = await prisma.project.create({
+                data: {
+                    id,
+                    name: aiResponse.systemInfo.name,
+                    description: aiResponse.systemInfo.description,
+                    framework: aiResponse.systemInfo.framework,
+                    githubUrl: aiResponse.systemInfo.githubUrl,
+                    webhookId: webhookRequest.data.id.toString(),
+                    userId: req.user.id,
+                },
+            });
+        } catch (e) {
+            console.log(e);
+            return res.status(500).json({
+                success: false,
+                message: "Project could not be created",
+                data: null,
+            });
+        }
+    }
     return res.json({
         success: true,
         message: "Chat response received",
         data: {
-            response: result.response.text(),
+            response: aiResponse.userReply,
         },
     });
 };
