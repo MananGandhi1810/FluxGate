@@ -84,8 +84,8 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
             },
         },
     });
+    await container.start();
     logContainerData(container.id, project.id);
-    container.start();
     const containerInspection = await container.inspect();
     var containerStatus = containerInspection.State.Status;
     const containerDetails = {
