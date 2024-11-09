@@ -239,7 +239,8 @@ export default function ProjectDetails() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {projectData.envSecrets.length > 0 ? (
+                    {!!projectData.envSecrets &&
+                    projectData.envSecrets.length > 0 ? (
                         <ul className="list-disc list-inside">
                             {projectData.envSecrets.map((secret, index) => (
                                 <li key={index}>
