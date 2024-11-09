@@ -94,10 +94,22 @@ const getFileTree = async (token, githubUrl, branchName = "main") => {
     return JSON.stringify(tree);
 };
 
+const getUserRepositories = async (token) => {
+    return await axios.get("https://api.github.com/user/repos?per_page=1000", {
+        headers: {
+            Authorization: "Bearer " + token,
+            "X-OAuth-Scopes": "repo, user",
+            "X-Accepted-OAuth-Scopes": "user",
+        },
+        validateStatus: false,
+    });
+};
+
 export {
     getAccessToken,
     getUserDetails,
     getUserEmails,
     createWebhook,
     getFileTree,
+    getUserRepositories,
 };

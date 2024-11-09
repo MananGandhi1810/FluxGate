@@ -7,9 +7,13 @@ const docker = new Docker();
 
 const logContainerData = async (containerId, projectId) => {
     const container = docker.getContainer(containerId);
+    if (!container) return;
     container.logs(
         { stdout: true, stderr: true, follow: true },
         function (err, stream) {
+            if (!stream) {
+                return;
+            }
             stream.on("data", (data) => {
                 sendMessage(projectId, "log", data.toString());
             });

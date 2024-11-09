@@ -4,6 +4,7 @@ import {
     getAccessToken,
     getUserDetails,
     getUserEmails,
+    getUserRepositories,
 } from "../utils/github-api.js";
 
 const prisma = new PrismaClient();
@@ -144,4 +145,35 @@ const userHandler = (req, res) => {
     });
 };
 
-export { githubCallbackHandler, accessTokenHandler, userHandler };
+const getRepositoriesHandler = async (req, res) => {
+    const ghAccessToken = req.user.ghAccessToken;
+    const repositoriesResponse = await getUserRepositories(ghAccessToken);
+    if (repositoriesResponse.status >= 400) {
+        return res.status(500).json({
+            success: false,
+            message: "Could not fetch repositories",
+            data: null,
+        });
+    }
+    const repositories = repositoriesResponse.data.map((repository) => {
+        return {
+            name: repository.name,
+            url: repository.clone_url,
+            visibility: repository.visibility,
+        };
+    });
+    res.json({
+        success: true,
+        message: "Repositories fetched succesfully",
+        data: {
+            repositories: repositories,
+        },
+    });
+};
+
+export {
+    githubCallbackHandler,
+    accessTokenHandler,
+    userHandler,
+    getRepositoriesHandler,
+};
