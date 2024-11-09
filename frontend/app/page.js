@@ -72,6 +72,7 @@ export default function Dashboard() {
           },
         });
         setProjects(response.data.data.projects);
+        console.log(response.data.data.projects)
       } catch (error) {
         console.error("Failed to fetch projects:", error);
         toast({
