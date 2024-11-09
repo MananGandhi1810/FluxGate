@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send } from "lucide-react";
+import { Bot, Send } from "lucide-react";
 import axios from "axios";
 
 export default function DeployChatbot() {
@@ -84,23 +84,29 @@ export default function DeployChatbot() {
                     <CardTitle>Deploy Chatbot</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow overflow-hidden p-0">
-                    <ScrollArea className="h-full p-4">
-                        {messages.map((message) => (
-                            <div
-                                key={message.id}
-                                className={`mb-4 p-3 rounded-lg ${
-                                    message.role === "user"
-                                        ? "bg-primary text-primary-foreground ml-auto max-w-[80%] w-auto"
-                                        : "bg-muted max-w-[80%] w-auto"
-                                }`}
-                            >
-                                <p className="text-sm">
-                                    {message.parts[0].text}
-                                </p>
-                            </div>
-                        ))}
-                        <div ref={messagesEndRef} />
-                    </ScrollArea>
+                    {messages.length > 0 ? (
+                        <ScrollArea className="h-full p-4">
+                            {messages.map((message) => (
+                                <div
+                                    key={message.id}
+                                    className={`mb-4 p-3 rounded-lg ${
+                                        message.role === "user"
+                                            ? "bg-primary text-primary-foreground ml-auto max-w-[80%] w-auto"
+                                            : "bg-muted max-w-[80%] w-auto"
+                                    }`}
+                                >
+                                    <p className="text-sm">
+                                        {message.parts[0].text}
+                                    </p>
+                                </div>
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </ScrollArea>
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center gap-2">
+                            Chat with AI and deploy your project
+                        </div>
+                    )}
                 </CardContent>
                 <CardFooter className="border-t p-4">
                     <form
