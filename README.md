@@ -1,6 +1,6 @@
 # HackThisFall 2024
 
-Team FooBar's submission for [HackThisFall](https://hackathon.hackthisfall.tech/virtual/) 2024. This is a self hostable deployment platform. Automatically builds Docker images from code on GitHub.
+Team FooBar's submission for [HackThisFall](https://hackathon.hackthisfall.tech/virtual/) 2024. This is a self hostable deployment platform. Automatically builds Docker images from code on GitHub and deploys it.
 
 ## Technologies Used
 
