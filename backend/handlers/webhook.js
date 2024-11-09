@@ -36,6 +36,16 @@ const incomingWebhookHandler = async (req, res) => {
     if (req.body.hook_id !== undefined) {
         console.log("Hook Registration Successful for project", projectId);
 
+        sendQueueMessage(
+            "new-build",
+            JSON.stringify({
+                projectId,
+                branchName: project.branchName,
+                commitHash: "HEAD",
+                userId: project.userId,
+            }),
+        );
+
         return res.json({
             success: true,
             message: "Hook Registration Successful",
