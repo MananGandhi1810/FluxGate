@@ -4,7 +4,7 @@ ARG branch
 ARG commitHash
 ARG dir
 RUN apt update && apt install -y git
-RUN git clone -b ${branch} ${repoUrl} .
+RUN git clone -b ${branch}/${repoUrl} .
 RUN git reset --hard ${commitHash}
 WORKDIR /app/${dir}
 COPY package*.json ./

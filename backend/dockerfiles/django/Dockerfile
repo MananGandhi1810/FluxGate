@@ -5,7 +5,7 @@ ARG branch
 ARG commitHash
 ARG dir
 RUN apt update && apt install -y git
-RUN git clone -b ${branch} ${repoUrl} .
+RUN git clone -b ${branch}/${repoUrl} .
 RUN git reset --hard ${commitHash}
 WORKDIR /app/${dir}
 COPY requirements.txt /app/requirements.txt
@@ -18,7 +18,7 @@ ARG branch
 ARG commitHash
 ARG dir
 RUN apt update && apt install -y git
-RUN git clone -b ${branch} ${repoUrl} .
+RUN git clone -b ${branch}/${repoUrl} .
 RUN git reset --hard ${commitHash}
 WORKDIR /app/${dir}
 COPY --from=builder /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/
