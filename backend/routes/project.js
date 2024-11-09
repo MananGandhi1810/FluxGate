@@ -3,6 +3,7 @@ import { checkAuth } from "../middleware/auth.js";
 import {
     getAllProjectsHandler,
     getProjectByIdHandler,
+    getProjectStatusHandler,
     newProjectHandler,
     newProjectWithChatHandler,
     startProjectHandler,
@@ -20,5 +21,6 @@ router.post("/new", newProjectHandler);
 router.post("/newWithChat", newProjectWithChatHandler);
 router.post("/:projectId/start", startProjectHandler);
 router.post("/:projectId/stop", stopProjectHandler);
+router.get("/:projectId/status", getProjectStatusHandler);
 
 export default router;

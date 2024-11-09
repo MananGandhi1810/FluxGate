@@ -337,6 +337,58 @@ const stopProjectHandler = async (req, res) => {
     });
 };
 
+const getProjectStatusHandler = async (req, res) => {
+    const { projectId } = req.params;
+    if (!projectId) {
+        return res.status(400).json({
+            success: false,
+            message: "Project Id is required",
+            data: null,
+        });
+    }
+    const project = await prisma.project.findUnique({
+        where: {
+            id: projectId,
+        },
+        select: {
+            containerId: true,
+        },
+    });
+    if (!project) {
+        return res.status(404).json({
+            success: false,
+            message: "Project not found",
+            data: null,
+        });
+    }
+    var container;
+    container = docker.getContainer(project.containerId);
+    if (!container) {
+        return res.status(500).json({
+            success: false,
+            message: "Could not stop project",
+            data: null,
+        });
+    }
+    var containerStatus;
+    try {
+        containerStatus = (await container.inspect()).State.Status;
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            message: "Could not fetch status",
+            data: null,
+        });
+    }
+    res.json({
+        success: true,
+        message: "Project stopped succesfully",
+        data: {
+            status: containerStatus,
+        },
+    });
+};
+
 export {
     newProjectHandler,
     newProjectWithChatHandler,
@@ -344,4 +396,5 @@ export {
     getProjectByIdHandler,
     startProjectHandler,
     stopProjectHandler,
+    getProjectStatusHandler
 };
