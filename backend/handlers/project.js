@@ -39,7 +39,7 @@ const newProjectHandler = async (req, res) => {
 
     // Process env secrets if present
     let processedEnvSecrets;
-    if (envSecrets && !Array.isArray(envSecrets)) {
+    if (envSecrets && Array.isArray(envSecrets)) {
         processedEnvSecrets = envSecrets.map((secret) => {
             if (
                 secret == undefined ||

@@ -10,12 +10,7 @@ const prisma = new PrismaClient();
 const ghRepoRegex =
     /https?:\/\/(www\.)?github.com\/(?<owner>[\w.-]+)\/(?<name>[\w.-]+)/;
 
-const buildContainer = async ({
-    projectId,
-    branchName,
-    commitHash,
-    userId,
-}) => {
+const buildContainer = async ({ projectId, branchName, commitHash }) => {
     const project = await prisma.project.findUnique({
         where: { id: projectId },
         include: {
@@ -24,10 +19,12 @@ const buildContainer = async ({
                     ghAccessToken: true,
                 },
             },
+            envSecrets: true,
         },
     });
     const match = project.githubUrl.match(ghRepoRegex);
     if (!match || !(match.groups?.owner && match.groups?.name)) return null;
+    const imageTag = `${match.groups.owner}/${match.groups.name}:latest`;
     const buildStream = await docker.buildImage(
         {
             context: path.join(
@@ -40,25 +37,50 @@ const buildContainer = async ({
         {
             buildargs: {
                 repoUrl: `https://${project.User.ghAccessToken}@github.com/${match.groups.owner}/${match.groups.name}`,
+                branch: branchName,
+                commitHash: commitHash,
             },
-            t: `${match.groups.owner}/${match.groups.name}:latest`,
+            t: imageTag,
         },
     );
     await new Promise((resolve, reject) => {
         buildStream.on("data", (data) => {
-            console.log(data.toString());
-            // const buildOutput = JSON.parse(data.toString());
-            // if (buildOutput.stream) {
-            //     process.stdout.write(buildOutput.stream); // Feedback of the progress
-            // } else if (buildOutput.error) {
-            //     console.error("Build Error:", buildOutput.error); // feedback error
-            //     reject(buildOutput.error);
-            // } else if (buildOutput.end) {
-            //     resolve();
-            // }
+            if (!data.toString().trim()) return;
+            try {
+                const buildOutput = JSON.parse(data.toString());
+                if (buildOutput.stream) {
+                    process.stdout.write(buildOutput.stream);
+                } else if (buildOutput.error) {
+                    console.error("Build Error:", buildOutput.error);
+                    reject(buildOutput.error);
+                }
+            } catch (e) {}
         });
+        buildStream.on("end", () => resolve());
     });
     console.log("Image Built succesfully");
+    const envSecrets = project.envSecrets.map((v) => `${v.key}=${v.value}`);
+    const container = await docker.createContainer({
+        Image: imageTag,
+        Tty: false,
+        Env: envSecrets,
+        HostConfig: {
+            PortBindings: {
+                "3000/tcp": [
+                    {
+                        HostPort: "0", //Map container to a random unused port.
+                    },
+                ],
+            },
+        },
+    });
+    container.start();
+    container.attach(
+        { stream: true, stdout: true, stderr: true },
+        function (err, stream) {
+            stream.pipe(process.stdout);
+        },
+    );
 };
 
 export { buildContainer };
