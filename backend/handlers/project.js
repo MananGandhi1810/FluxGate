@@ -153,6 +153,7 @@ const newProjectWithChatHandler = async (req, res) => {
             data: null,
         });
     }
+    var projectCreated = false;
     if (aiResponse.systemInfo != null) {
         var project;
         let id;
@@ -190,6 +191,7 @@ const newProjectWithChatHandler = async (req, res) => {
                     userId: req.user.id,
                 },
             });
+            projectCreated = true;
         } catch (e) {
             console.log(e);
             return res.status(500).json({
@@ -203,6 +205,7 @@ const newProjectWithChatHandler = async (req, res) => {
         success: true,
         message: "Chat response received",
         data: {
+            projectCreated,
             response: aiResponse.userReply,
         },
     });
@@ -396,5 +399,5 @@ export {
     getProjectByIdHandler,
     startProjectHandler,
     stopProjectHandler,
-    getProjectStatusHandler
+    getProjectStatusHandler,
 };

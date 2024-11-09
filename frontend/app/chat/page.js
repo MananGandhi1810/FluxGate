@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, Send } from "lucide-react";
 import axios from "axios";
+import { redirect } from "next/navigation";
 
 export default function DeployChatbot() {
     const [messages, setMessages] = useState([]);
@@ -55,6 +56,11 @@ export default function DeployChatbot() {
                 },
             );
             console.log(response.data);
+            if (response.data.data.projectCreated) {
+                setTimeout(() => {
+                    redirect("/");
+                }, 3000);
+            }
             setMessages((prev) => [
                 ...prev,
                 {
