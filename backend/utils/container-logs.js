@@ -5,6 +5,8 @@ import Docker from "dockerode";
 const prisma = new PrismaClient();
 const docker = new Docker();
 
+const stripAnsi = (str) => str.replace(/\x1b\[[0-9;]*m/g, '');
+
 const logContainerData = async (containerId, projectId) => {
     const container = docker.getContainer(containerId);
     if (!container) return;
@@ -15,7 +17,8 @@ const logContainerData = async (containerId, projectId) => {
                 return;
             }
             stream.on("data", (data) => {
-                sendMessage(projectId, "log", data.toString());
+                const cleanData = stripAnsi(data.toString());
+                sendMessage(projectId, "log", cleanData);
             });
             stream.on("error", (e) => {
                 console.error(e);
