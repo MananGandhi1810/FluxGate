@@ -50,7 +50,7 @@ model Project {
     imageName     String?
     deployCommit  String?
     containerId   String?          @unique
-    containerPort Int?
+    containerPort String?
     createdAt     DateTime         @default(now())
     lastDeploy    DateTime?
     branchName    String?          @default("main")
