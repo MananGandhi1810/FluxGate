@@ -363,7 +363,7 @@ export default function Dashboard() {
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <Link href={`/project/${project.id}`} passHref>
+                  <Link href={`/projects/${project.id}`} passHref>
                     <Button variant="outline" className="w-full">
                       View Details
                     </Button>
