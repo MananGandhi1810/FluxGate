@@ -43,21 +43,31 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
             t: imageTag,
         },
     );
-    await new Promise((resolve, reject) => {
-        buildStream.on("data", (data) => {
-            if (!data.toString().trim()) return;
-            try {
-                const buildOutput = JSON.parse(data.toString());
-                if (buildOutput.stream) {
-                    process.stdout.write(buildOutput.stream);
-                } else if (buildOutput.error) {
-                    console.error("Build Error:", buildOutput.error);
-                    reject(buildOutput.error);
-                }
-            } catch (e) {}
+    try {
+        await new Promise((resolve, reject) => {
+            buildStream.on("data", (data) => {
+                if (!data.toString().trim()) return;
+                try {
+                    const buildOutput = JSON.parse(data.toString());
+                    if (buildOutput.stream) {
+                        process.stdout.write(buildOutput.stream);
+                    } else if (buildOutput.error) {
+                        console.error("Build Error:", buildOutput.error);
+                        reject(buildOutput.error);
+                    }
+                } catch (e) {}
+            });
+            buildStream.on("end", () => resolve());
         });
-        buildStream.on("end", () => resolve());
-    });
+    } catch (e) {
+        await prisma.project.update({
+            where: { id: projectId },
+            data: {
+                status: "error",
+            },
+        });
+        return;
+    }
     console.log("Image Built succesfully");
     const envSecrets = project.envSecrets.map((v) => `${v.key}=${v.value}`);
     const container = await docker.createContainer({
@@ -91,6 +101,15 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
         lastDeploy: new Date(),
         status: containerStatus,
     };
+    const prevContainer = docker.getContainer(project.containerId);
+    if (prevContainer) {
+        try {
+            await prevContainer.kill();
+        } catch (e) {}
+        try {
+            await prevContainer.remove();
+        } catch (e) {}
+    }
     const projectState = await prisma.project.update({
         where: { id: projectId },
         data: containerDetails,
