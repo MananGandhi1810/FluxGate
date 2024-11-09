@@ -3,6 +3,7 @@ import Docker from "dockerode";
 import path from "path";
 import { logContainerData } from "../utils/container-logs.js";
 import { sendMessage } from "../utils/socket-service.js";
+import sendEmail from "../utils/email.js";
 
 const docker = new Docker();
 const prisma = new PrismaClient();
@@ -17,6 +18,7 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
             User: {
                 select: {
                     ghAccessToken: true,
+                    email: true,
                 },
             },
             envSecrets: true,
@@ -61,6 +63,14 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
             buildStream.on("end", () => resolve());
         });
     } catch (e) {
+        sendEmail(
+            project.User.email,
+            "Build Failed",
+            `<h1>Build failed for ${project.name}</h1>
+Error:
+${e}
+            `,
+        );
         await prisma.project.update({
             where: { id: projectId },
             data: {
