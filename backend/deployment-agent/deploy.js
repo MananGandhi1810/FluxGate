@@ -81,6 +81,21 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
             stream.pipe(process.stdout);
         },
     );
+    const containerInspection = await container.inspect();
+    console.log(containerInspection);
+    var containerStatus = containerInspection.State.Status;
+    const containerDetails = {
+        containerId: containerInspection.Id,
+        imageName: imageTag,
+        deployCommit: commitHash,
+        lastDeploy: new Date(),
+        status: containerStatus,
+    };
+    const projectState = await prisma.project.update({
+        where: { id: projectId },
+        data: containerDetails,
+    });
+    console.log(projectState);
 };
 
 export { buildContainer };
