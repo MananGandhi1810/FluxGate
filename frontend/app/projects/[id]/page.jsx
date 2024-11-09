@@ -18,9 +18,9 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-const fetchProjectData = async (projectId) => {
-    const authToken = localStorage.getItem("accessToken");
+const authToken = localStorage.getItem("accessToken");
 
+const fetchProjectData = async (projectId) => {
     try {
         const response = await axios.get(
             `http://localhost:3000/project/${projectId}`,
@@ -62,6 +62,29 @@ export default function ProjectDetails() {
         }
     }, []);
 
+    useEffect(() => {
+        pollForProjectStatus(projectId);
+    }, []);
+
+    const pollForProjectStatus = async (projectId) => {
+        const result = await axios.get(
+            `http://localhost:3000/project/${projectId}/status`,
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authToken}`,
+                },
+                validateStatus: false,
+            },
+        );
+        if (result.data.success) {
+            setProjectData((prev) => {
+                return { ...prev, status: result.data.data.status };
+            });
+        }
+        setTimeout(() => pollForProjectStatus(projectId), 5000);
+    };
+
     if (!projectData) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -79,8 +102,15 @@ export default function ProjectDetails() {
                         Back to Dashboard
                     </Button>
                 </Link>
-                <Badge variant="outline" className="text-sm">
-                    Status: {projectData.status}
+                <Badge
+                    variant="outline"
+                    className={`text-sm capitalize ${
+                        projectData.status == "running"
+                            ? "bg-green-400"
+                            : "bg-red-400"
+                    }`}
+                >
+                    Status: {projectData.status.toLocaleString()}
                 </Badge>
             </div>
 
@@ -104,7 +134,7 @@ export default function ProjectDetails() {
                             href={projectData.githubUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-500 hover:underline"
+                            className="text-blue-500 hover:underline overflow-ellipsis"
                         >
                             {projectData.githubUrl}
                         </a>
