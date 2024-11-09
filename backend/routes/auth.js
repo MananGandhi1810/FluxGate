@@ -5,6 +5,7 @@ import {
     userHandler,
 } from "../handlers/auth.js";
 import { checkAuth } from "../middleware/auth.js";
+
 var router = Router();
 
 router.get("/gh-callback", githubCallbackHandler);
