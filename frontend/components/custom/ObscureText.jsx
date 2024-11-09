@@ -11,7 +11,7 @@ function ObscureText({ text }) {
                 onClick={() => setHidden((prev) => !prev)}
             >
                 {hidden ? (
-                    <Eye className="w-5 h-5" />
+                    <Eye className="w-5 h-5 opacity-30 hover:opacity-90 duration-75" />
                 ) : (
                     <EyeOff className="w-5 h-5" />
                 )}
