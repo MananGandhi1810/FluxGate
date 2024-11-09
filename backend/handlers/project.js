@@ -402,6 +402,45 @@ const getProjectStatusHandler = async (req, res) => {
     });
 };
 
+const getContainerPortHandler = async (req, res) => {
+    const { projectId } = req.params;
+    
+    if (!projectId) {
+        return res.status(400).json({
+            success: false,
+            message: "Project Id is required",
+            data: null,
+        });
+    }
+
+    const project = await prisma.project.findUnique({
+        where: {
+            id: projectId,
+        },
+        select: {
+            containerId: true,
+        },
+    });
+
+    if (!project) {
+        return res.status(404).json({
+            success: false,
+            message: "Project not found",
+            data: null,
+        });
+    }
+
+    const containerPort = project.containerPort;
+
+    res.json({
+        success: true,
+        message: "Container Port fetched succesfully",
+        data: {
+            port: containerPort,
+        },
+    });
+};
+
 export {
     newProjectHandler,
     newProjectWithChatHandler,
@@ -410,4 +449,5 @@ export {
     startProjectHandler,
     stopProjectHandler,
     getProjectStatusHandler,
+    getContainerPortHandler,
 };

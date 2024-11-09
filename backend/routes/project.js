@@ -8,6 +8,7 @@ import {
     newProjectWithChatHandler,
     startProjectHandler,
     stopProjectHandler,
+    getContainerPortHandler,
 } from "../handlers/project.js";
 import { incomingWebhookHandler } from "../handlers/webhook.js";
 const router = Router();
@@ -22,5 +23,6 @@ router.post("/newWithChat", newProjectWithChatHandler);
 router.post("/:projectId/start", startProjectHandler);
 router.post("/:projectId/stop", stopProjectHandler);
 router.get("/:projectId/status", getProjectStatusHandler);
+router.get("/:projectId/port", getContainerPortHandler);
 
 export default router;
