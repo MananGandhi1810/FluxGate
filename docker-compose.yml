@@ -1,0 +1,41 @@
+services:
+    backend:
+        build: ./backend
+        restart: unless-stopped
+        ports:
+            - 3000:3000/tcp
+        volumes:
+            - ./backend/.env:/usr/src/app/.env
+            - /var/run/docker.sock:/var/run/docker.sock
+        user: root
+        command: sh -c "npx prisma migrate deploy && npm run start"
+
+    postgresql:
+        image: bitnami/postgresql:latest
+        restart: unless-stopped
+        ports:
+            - "5432:5432/tcp"
+        volumes:
+            - pg-data:/bitnami/postgresql
+        environment:
+            - POSTGRESQL_USERNAME=postgres
+            - POSTGRESQL_PASSWORD=your_password
+
+    redis:
+        image: bitnami/redis:latest
+        restart: unless-stopped
+        ports:
+            - "6379:6379/tcp"
+        environment:
+            - ALLOW_EMPTY_PASSWORD=yes
+
+    frontend:
+        build: ./frontend
+        restart: unless-stopped
+        volumes:
+            - ./frontend/.env:/usr/src/app/.env
+        ports:
+            - 8000:3000/tcp
+
+volumes:
+    pg-data:
