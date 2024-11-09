@@ -53,7 +53,6 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
                         process.stdout.write(buildOutput.stream);
                     } else if (buildOutput.error) {
                         console.error("Build Error:", buildOutput.error);
-                        reject(buildOutput.error);
                     }
                 } catch (e) {}
             });
