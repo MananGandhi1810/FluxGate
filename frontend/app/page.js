@@ -151,12 +151,6 @@ export default function Dashboard() {
                 "http://localhost:3000/project/new",
                 {
                     ...formData,
-                    envSecrets: Object.fromEntries(
-                        formData.envSecrets.map(({ key, value }) => [
-                            key,
-                            value,
-                        ]),
-                    ),
                 },
                 { headers: { Authorization: `Bearer ${accessToken}` } },
             );

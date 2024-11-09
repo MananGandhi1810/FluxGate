@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import ObscureText from "@/components/custom/ObscureText";
 
 const authToken = localStorage.getItem("accessToken");
 
@@ -241,7 +242,12 @@ export default function ProjectDetails() {
                     {projectData.envSecrets.length > 0 ? (
                         <ul className="list-disc list-inside">
                             {projectData.envSecrets.map((secret, index) => (
-                                <li key={index}>{secret}</li>
+                                <li key={index}>
+                                    {secret.key}:{" "}
+                                    <span>
+                                        <ObscureText text={secret.value} />
+                                    </span>
+                                </li>
                             ))}
                         </ul>
                     ) : (
