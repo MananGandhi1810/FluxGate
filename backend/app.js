@@ -3,6 +3,8 @@ import cookieParser from "cookie-parser";
 import logger from "morgan";
 import CORS from "cors";
 
+import cors from "cors"
+
 import authRouter from "./routes/auth.js";
 import projectRouter from "./routes/project.js";
 
@@ -17,7 +19,7 @@ app.use(cookieParser());
 
 app.use("/auth", authRouter);
 app.use("/project", projectRouter);
-
+app.use(cors());
 app.use(function (req, res, next) {
     res.status(404).json({
         success: false,
