@@ -1,11 +1,13 @@
 FROM python:3.12-slim-bookworm AS builder
 WORKDIR /app
-ARG repoUrl
+ARG owner
+ARG name
+ARG gh_token
 ARG branch
 ARG commitHash
 ARG dir
 RUN apt update && apt install -y git
-RUN git clone -b ${branch}/${repoUrl} .
+RUN git clone -b ${branch} https://${gh_token}@github.com/${owner}/${name}.git .
 RUN git reset --hard ${commitHash}
 WORKDIR /app/${dir}
 COPY requirements.txt /app/requirements.txt
@@ -13,12 +15,14 @@ RUN pip install -r /app/requirements.txt
 
 FROM python:3.12-slim-bookworm
 WORKDIR /app
-ARG repoUrl
+ARG owner
+ARG name
+ARG gh_token
 ARG branch
 ARG commitHash
 ARG dir
 RUN apt update && apt install -y git
-RUN git clone -b ${branch}/${repoUrl} .
+RUN git clone -b ${branch} https://${gh_token}@github.com/${owner}/${name}.git .
 RUN git reset --hard ${commitHash}
 WORKDIR /app/${dir}
 COPY --from=builder /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/

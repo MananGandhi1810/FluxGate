@@ -38,7 +38,9 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
         },
         {
             buildargs: {
-                repoUrl: `https://${project.User.ghAccessToken}@github.com/${match.groups.owner}/${match.groups.name}`,
+                owner: match.groups.owner,
+                name: match.groups.name,
+                gh_token: project.User.ghAccessToken,
                 branch: branchName,
                 commitHash: commitHash,
                 dir: project.baseDirectory,
