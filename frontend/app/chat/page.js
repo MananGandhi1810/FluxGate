@@ -19,9 +19,10 @@ export default function DeployChatbot() {
     const [input, setInput] = useState("");
     const messagesEndRef = useRef(null);
     const [loading, setLoading] = useState(false);
-    const [authToken] = useState("");
 
     const handleSubmit = async (e) => {
+        const accessToken = localStorage.getItem("accessToken");
+
         e.preventDefault();
         if (loading) return;
         const message = input;
@@ -48,7 +49,7 @@ export default function DeployChatbot() {
                 },
                 {
                     headers: {
-                        authorization: `Bearer ${authToken}`,
+                        authorization: `Bearer ${accessToken}`,
                     },
                     validateStatus: false,
                 },
