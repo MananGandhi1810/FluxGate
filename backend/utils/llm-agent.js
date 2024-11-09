@@ -47,6 +47,7 @@ Respond in the following format:
 {
     "userReply": "YOUR REPLY",
     "systemInfo": {
+        "name": ""
         "githubUrl": "",
         "framework": "",
         "baseDirectory": "",

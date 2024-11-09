@@ -13,13 +13,6 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-enum Status {
-    RUNNING
-    BUILDING
-    FAILED
-    DOWN
-}
-
 enum ProjectFramework {
     Node
     React
@@ -52,7 +45,7 @@ model Project {
     description   String?
     githubUrl     String?
     envSecrets    EnvSecrets[]
-    status        Status           @default(DOWN)
+    status        String           @default("pending")
     framework     ProjectFramework
     imageName     String?
     deployCommit  String?
@@ -74,7 +67,7 @@ model EnvSecrets {
     id        String  @id @default(cuid())
     key       String
     value     String
-    project   Project @relation(fields: [projectId], references: [id])
+    project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
     projectId String
 
     @@unique([key, projectId])

@@ -4,7 +4,6 @@ import Docker from "dockerode";
 import path from "path";
 
 const docker = new Docker();
-const dockerode = new Dockerode();
 const prisma = new PrismaClient();
 
 const ghRepoRegex =
@@ -39,25 +38,36 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
                 repoUrl: `https://${project.User.ghAccessToken}@github.com/${match.groups.owner}/${match.groups.name}`,
                 branch: branchName,
                 commitHash: commitHash,
+                dir: project.baseDirectory,
             },
             t: imageTag,
         },
     );
-    await new Promise((resolve, reject) => {
-        buildStream.on("data", (data) => {
-            if (!data.toString().trim()) return;
-            try {
-                const buildOutput = JSON.parse(data.toString());
-                if (buildOutput.stream) {
-                    process.stdout.write(buildOutput.stream);
-                } else if (buildOutput.error) {
-                    console.error("Build Error:", buildOutput.error);
-                    reject(buildOutput.error);
-                }
-            } catch (e) {}
+    try {
+        await new Promise((resolve, reject) => {
+            buildStream.on("data", (data) => {
+                if (!data.toString().trim()) return;
+                try {
+                    const buildOutput = JSON.parse(data.toString());
+                    if (buildOutput.stream) {
+                        process.stdout.write(buildOutput.stream);
+                    } else if (buildOutput.error) {
+                        console.error("Build Error:", buildOutput.error);
+                        reject(buildOutput.error);
+                    }
+                } catch (e) {}
+            });
+            buildStream.on("end", () => resolve());
         });
-        buildStream.on("end", () => resolve());
-    });
+    } catch (e) {
+        await prisma.project.update({
+            where: { id: projectId },
+            data: {
+                status: "error",
+            },
+        });
+        return;
+    }
     console.log("Image Built succesfully");
     const envSecrets = project.envSecrets.map((v) => `${v.key}=${v.value}`);
     const container = await docker.createContainer({
@@ -81,6 +91,30 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
             stream.pipe(process.stdout);
         },
     );
+    const containerInspection = await container.inspect();
+    console.log(containerInspection);
+    var containerStatus = containerInspection.State.Status;
+    const containerDetails = {
+        containerId: containerInspection.Id,
+        imageName: imageTag,
+        deployCommit: commitHash,
+        lastDeploy: new Date(),
+        status: containerStatus,
+    };
+    const prevContainer = docker.getContainer(project.containerId);
+    if (prevContainer) {
+        try {
+            await prevContainer.kill();
+        } catch (e) {}
+        try {
+            await prevContainer.remove();
+        } catch (e) {}
+    }
+    const projectState = await prisma.project.update({
+        where: { id: projectId },
+        data: containerDetails,
+    });
+    console.log(projectState);
 };
 
 export { buildContainer };

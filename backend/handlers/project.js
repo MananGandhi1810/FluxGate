@@ -1,9 +1,11 @@
 import { PrismaClient } from "@prisma/client";
-// import { sendQueueMessage } from "../utils/queue-manager.js";
 import { createWebhook } from "../utils/github-api.js";
 import { chatWithAgent } from "../utils/llm-agent.js";
+import removeMd from "remove-markdown";
+import Docker from "dockerode";
 
 const prisma = new PrismaClient();
+const docker = new Docker();
 
 const frameworks = [
     "Node",
@@ -91,7 +93,6 @@ const newProjectHandler = async (req, res) => {
                 name,
                 description,
                 framework,
-                framework,
                 githubUrl,
                 webhookId: webhookRequest.data.id.toString(),
                 userId: req.user.id,
@@ -135,14 +136,205 @@ const newProjectWithChatHandler = async (req, res) => {
             data: null,
         });
     }
-    console.log(result.response.text());
+    var aiResponse;
+    try {
+        aiResponse = JSON.parse(removeMd(result.response.text()));
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred",
+            data: null,
+        });
+    }
+    console.log(aiResponse);
+    if (aiResponse.systemInfo != null) {
+        var project;
+        let id;
+        do {
+            id = Math.floor(Math.random() * 1000000).toString();
+        } while (
+            await prisma.project.findUnique({
+                where: {
+                    id,
+                },
+            })
+        );
+        const webhookRequest = await createWebhook(
+            id,
+            req.user.ghAccessToken,
+            aiResponse.systemInfo.githubUrl,
+        );
+        if (!webhookRequest || webhookRequest.data.id == undefined) {
+            return res.status(400).json({
+                success: false,
+                message: "GitHub Repo is invalid or cannot be accessed",
+                data: null,
+            });
+        }
+        try {
+            project = await prisma.project.create({
+                data: {
+                    id,
+                    name: aiResponse.systemInfo.name,
+                    description: aiResponse.systemInfo.description,
+                    framework: aiResponse.systemInfo.framework,
+                    githubUrl: aiResponse.systemInfo.githubUrl,
+                    webhookId: webhookRequest.data.id.toString(),
+                    userId: req.user.id,
+                },
+            });
+        } catch (e) {
+            console.log(e);
+            return res.status(500).json({
+                success: false,
+                message: "Project could not be created",
+                data: null,
+            });
+        }
+    }
     return res.json({
         success: true,
         message: "Chat response received",
         data: {
-            response: result.response.text(),
+            response: aiResponse.userReply,
         },
     });
 };
 
-export { newProjectHandler, newProjectWithChatHandler };
+const getAllProjectsHandler = async (req, res) => {
+    const projects = await prisma.project.findMany({
+        where: {
+            userId: req.user.id,
+        },
+    });
+    res.json({
+        success: true,
+        message: "Projects fetched succesfully",
+        data: {
+            projects,
+        },
+    });
+};
+
+const getProjectByIdHandler = async (req, res) => {
+    const { projectId } = req.params;
+    if (!projectId) {
+        return res.status(400).json({
+            success: false,
+            message: "Project Id is required",
+            data: null,
+        });
+    }
+    const project = await prisma.project.findUnique({
+        where: {
+            id: projectId,
+            userId: req.user.id,
+        },
+        include: {
+            envSecrets: true,
+        },
+    });
+    if (!project) {
+        return res.status(404).json({
+            success: false,
+            message: "This project does not exist",
+            data: null,
+        });
+    }
+    res.json({
+        success: true,
+        message: "Project found",
+        data: { project },
+    });
+};
+
+const startProjectHandler = async (req, res) => {
+    const { projectId } = req.params;
+    if (!projectId) {
+        return res.status(400).json({
+            success: false,
+            message: "Project Id is required",
+            data: null,
+        });
+    }
+    const project = await prisma.project.findUnique({
+        where: {
+            id: projectId,
+        },
+        select: {
+            containerId: true,
+        },
+    });
+    if (!project) {
+        return res.status(404).json({
+            success: false,
+            message: "Project not found",
+            data: null,
+        });
+    }
+    try {
+        const container = docker.getContainer(project.containerId);
+        container.start();
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            message: "Could not start project",
+            data: null,
+        });
+    }
+    res.json({
+        success: true,
+        message: "Project started succesfully",
+        data: null,
+    });
+};
+
+const stopProjectHandler = async (req, res) => {
+    const { projectId } = req.params;
+    if (!projectId) {
+        return res.status(400).json({
+            success: false,
+            message: "Project Id is required",
+            data: null,
+        });
+    }
+    const project = await prisma.project.findUnique({
+        where: {
+            id: projectId,
+        },
+        select: {
+            containerId: true,
+        },
+    });
+    if (!project) {
+        return res.status(404).json({
+            success: false,
+            message: "Project not found",
+            data: null,
+        });
+    }
+    try {
+        const container = docker.getContainer(project.containerId);
+        container.kill();
+    } catch (e) {
+        return res.status(500).json({
+            success: false,
+            message: "Could not stop project",
+            data: null,
+        });
+    }
+    res.json({
+        success: true,
+        message: "Project stopped succesfully",
+        data: null,
+    });
+};
+
+export {
+    newProjectHandler,
+    newProjectWithChatHandler,
+    getAllProjectsHandler,
+    getProjectByIdHandler,
+    startProjectHandler,
+    stopProjectHandler,
+};
