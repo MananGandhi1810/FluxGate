@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { githubCallbackHandler, accessTokenHandler, userHandler } from "../handlers/auth.js";
+import {
+    githubCallbackHandler,
+    accessTokenHandler,
+    userHandler,
+} from "../handlers/auth.js";
 import { checkAuth } from "../middleware/auth.js";
 var router = Router();
 

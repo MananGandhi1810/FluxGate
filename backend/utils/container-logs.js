@@ -11,7 +11,6 @@ const logContainerData = async (containerId, projectId) => {
         { stdout: true, stderr: true, follow: true },
         function (err, stream) {
             stream.on("data", (data) => {
-                console.log(data.toString());
                 sendMessage(projectId, "log", data.toString());
             });
             stream.on("error", (e) => {

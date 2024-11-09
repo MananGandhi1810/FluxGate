@@ -71,7 +71,7 @@ const getFileTree = async (token, githubUrl, branchName = "main") => {
     if (!match || !(match.groups?.owner && match.groups?.name)) return null;
     const repoName = `${match.groups.owner}/${match.groups.name}`;
     if (await exists(`file-tree:${repoName}/${branchName}`)) {
-        return await get(`file-tree:${repoName}/${branchName}`);
+        return JSON.parse(await get(`file-tree:${repoName}/${branchName}`));
     }
     const result = await axios.get(
         `https://api.github.com/repos/${repoName}/git/trees/${branchName}?recursive=true`,
@@ -87,8 +87,11 @@ const getFileTree = async (token, githubUrl, branchName = "main") => {
     if (result.status >= 400) {
         return null;
     }
-    set(`file-tree:${repoName}/${branchName}`, result.data.tree, 10 * 60);
-    return result.data.tree;
+    const tree = result.data.tree.map((element) => {
+        return { path: element.path, type: element.type };
+    });
+    set(`file-tree:${repoName}/${branchName}`, JSON.stringify(tree), 10 * 60);
+    return JSON.stringify(tree);
 };
 
 export {

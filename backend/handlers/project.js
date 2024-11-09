@@ -127,7 +127,16 @@ const newProjectWithChatHandler = async (req, res) => {
             data: null,
         });
     }
-    const result = await chatWithAgent(req.user.ghAccessToken, prompt, history);
+    const processedHistory = history.map((message) => {
+        return { role: message.role, parts: message.parts };
+    });
+    console.log(processedHistory);
+    console.log(JSON.stringify(history));
+    const result = await chatWithAgent(
+        req.user.ghAccessToken,
+        prompt,
+        processedHistory,
+    );
     console.log(result);
     if (!result) {
         return res.status(500).json({
