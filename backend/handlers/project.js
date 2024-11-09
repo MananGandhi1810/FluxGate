@@ -284,7 +284,10 @@ const startProjectHandler = async (req, res) => {
     }
     try {
         const container = docker.getContainer(project.containerId);
-        container.start();
+        const containerState = (await container.inspect()).State.Status;
+        if (containerState == "running") {
+            await container.start();
+        }
     } catch (e) {
         return res.status(500).json({
             success: false,
@@ -325,7 +328,10 @@ const stopProjectHandler = async (req, res) => {
     }
     try {
         const container = docker.getContainer(project.containerId);
-        container.kill();
+        const containerState = (await container.inspect()).State.Status;
+        if (containerState == "running") {
+            await container.kill();
+        }
     } catch (e) {
         return res.status(500).json({
             success: false,
@@ -369,13 +375,17 @@ const getProjectStatusHandler = async (req, res) => {
     if (!container) {
         return res.status(500).json({
             success: false,
-            message: "Could not stop project",
+            message: "Could not get project status",
             data: null,
         });
     }
     var containerStatus;
     try {
         containerStatus = (await container.inspect()).State.Status;
+        await prisma.project.update({
+            where: { id: projectId },
+            data: { status: containerStatus },
+        });
     } catch (e) {
         return res.status(500).json({
             success: false,
@@ -385,7 +395,7 @@ const getProjectStatusHandler = async (req, res) => {
     }
     res.json({
         success: true,
-        message: "Project stopped succesfully",
+        message: "Project status fetched succesfully",
         data: {
             status: containerStatus,
         },

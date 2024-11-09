@@ -64,7 +64,7 @@ export default function ProjectDetails() {
     useEffect(() => {
         pollForProjectStatus(projectId);
     }, []);
-    
+
     const pollForProjectStatus = async (projectId) => {
         const result = await axios.get(
             `http://localhost:3000/project/${projectId}/status`,
@@ -81,30 +81,26 @@ export default function ProjectDetails() {
                 return { ...prev, status: result.data.data.status };
             });
         }
-        setTimeout(() => pollForProjectStatus(projectId), 5000);
+        setTimeout(() => pollForProjectStatus(projectId), 3000);
     };
 
     useEffect(() => {
-        if (projectId) {
-            const pusher = new Pusher("your-pusher-key", {
-                cluster: "ap2",
-            });
+        const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+            cluster: "ap2",
+        });
 
-            const channel = pusher.subscribe(projectId);
+        const channel = pusher.subscribe(projectId);
 
-            channel.bind("build", (data) => {
-                setBuildLogs((prevLogs) => [...prevLogs, data.message]);
-            });
+        channel.bind("build", (data) => {
+            console.log(data);
+            setBuildLogs((prevLogs) => [...prevLogs, data.message]);
+        });
 
-            channel.bind("logs", (data) => {
-                setLogs((prevLogs) => [...prevLogs, data.message]);
-            });
-
-            return () => {
-                pusher.unsubscribe(projectId);
-            };
-        }
-    }, [projectId]);
+        channel.bind("log", (data) => {
+            console.log(data);
+            setLogs((prevLogs) => [...prevLogs, data.message]);
+        });
+    }, []);
 
     // Start and Stop project handlers
     const handleStartProject = async () => {
@@ -114,9 +110,9 @@ export default function ProjectDetails() {
                 {},
                 {
                     headers: { Authorization: `Bearer ${authToken}` },
+                    validateStatus: false,
                 },
             );
-            alert("Project started successfully");
         } catch (error) {
             console.error("Error starting project:", error);
         }
