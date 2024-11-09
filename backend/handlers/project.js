@@ -199,4 +199,56 @@ const newProjectWithChatHandler = async (req, res) => {
     });
 };
 
-export { newProjectHandler, newProjectWithChatHandler };
+const getAllProjectsHandler = async (req, res) => {
+    const projects = await prisma.project.findMany({
+        where: {
+            userId: req.user.id,
+        },
+    });
+    res.json({
+        success: true,
+        message: "Projects fetched succesfully",
+        data: {
+            projects,
+        },
+    });
+};
+
+const getProjectByIdHandler = async (req, res) => {
+    const { projectId } = req.params;
+    if (!projectId) {
+        return res.status(400).json({
+            success: false,
+            message: "Project Id is required",
+            data: null,
+        });
+    }
+    const project = await prisma.project.findUnique({
+        where: {
+            id: projectId,
+            userId: req.user.id,
+        },
+        include: {
+            envSecrets: true,
+        },
+    });
+    if (!project) {
+        return res.status(404).json({
+            success: false,
+            message: "This project does not exist",
+            data: null,
+        });
+    }
+    res.json({
+        success: true,
+        message: "Project found",
+        data: { project },
+    });
+};
+
+export {
+    newProjectHandler,
+    newProjectWithChatHandler,
+    getAllProjectsHandler,
+    getProjectByIdHandler,
+};
