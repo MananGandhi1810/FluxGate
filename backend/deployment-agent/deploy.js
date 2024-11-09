@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import Docker from "dockerode";
 import path from "path";
 import { logContainerData } from "../utils/container-logs.js";
+import { sendMessage } from "../utils/socket-service.js";
 
 const docker = new Docker();
 const prisma = new PrismaClient();
@@ -50,7 +51,7 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
                 try {
                     const buildOutput = JSON.parse(data.toString());
                     if (buildOutput.stream) {
-                        process.stdout.write(buildOutput.stream);
+                        sendMessage(projectId, "build", data.toString());
                     } else if (buildOutput.error) {
                         console.error("Build Error:", buildOutput.error);
                         reject(buildOutput.error);
@@ -68,7 +69,6 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
         });
         return;
     }
-    console.log("Image Built succesfully");
     const envSecrets = project.envSecrets.map((v) => `${v.key}=${v.value}`);
     const container = await docker.createContainer({
         Image: imageTag,
@@ -87,7 +87,6 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
     container.start();
     logContainerData(container.id, project.id);
     const containerInspection = await container.inspect();
-    console.log(containerInspection);
     var containerStatus = containerInspection.State.Status;
     const containerDetails = {
         containerId: containerInspection.Id,
@@ -109,7 +108,6 @@ const buildContainer = async ({ projectId, branchName, commitHash }) => {
         where: { id: projectId },
         data: containerDetails,
     });
-    console.log(projectState);
 };
 
 export { buildContainer };
