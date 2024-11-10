@@ -421,38 +421,41 @@ export default function Dashboard() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {projects.map((project) => (
-                            <Card
-                                key={project.id}
-                                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                            >
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Box className="w-5 h-5" />
-                                        {project.name}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        {project.description ||
-                                            "No description provided"}
-                                    </p>
-                                </CardContent>
-                                <CardFooter>
-                                    <Link
-                                        href={`/projects/${project.id}`}
-                                        passHref
+                        {projects.map(
+                            (project) =>
+                                project && (
+                                    <Card
+                                        key={project.id}
+                                        className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                                     >
-                                        <Button
-                                            variant="outline"
-                                            className="w-full"
-                                        >
-                                            View Details
-                                        </Button>
-                                    </Link>
-                                </CardFooter>
-                            </Card>
-                        ))}
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2">
+                                                <Box className="w-5 h-5" />
+                                                {project.name}
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                {project.description ||
+                                                    "No description provided"}
+                                            </p>
+                                        </CardContent>
+                                        <CardFooter>
+                                            <Link
+                                                href={`/projects/${project.id}`}
+                                                passHref
+                                            >
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full"
+                                                >
+                                                    View Details
+                                                </Button>
+                                            </Link>
+                                        </CardFooter>
+                                    </Card>
+                                ),
+                        )}
                     </div>
                 )}
             </div>

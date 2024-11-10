@@ -46,7 +46,9 @@ const newProjectHandler = async (req, res) => {
             if (
                 secret == undefined ||
                 secret.key == undefined ||
-                secret.value == undefined
+                secret.value == undefined ||
+                secret.key.trim() == "" ||
+                secret.value.trim() == ""
             ) {
                 return;
             }
@@ -55,6 +57,8 @@ const newProjectHandler = async (req, res) => {
     } else {
         processedEnvSecrets = [];
     }
+    processedEnvSecrets =
+        processedEnvSecrets == undefined ? [] : processedEnvSecrets;
 
     // Generate a unique project id
     let id;
@@ -74,6 +78,7 @@ const newProjectHandler = async (req, res) => {
         req.user.ghAccessToken,
         githubUrl,
     );
+    console.log(webhookRequest.data);
 
     // Check if webhook creation was successful
     if (!webhookRequest || webhookRequest.data.id == undefined) {
@@ -371,8 +376,9 @@ const getProjectStatusHandler = async (req, res) => {
         });
     }
     var container;
-    container = docker.getContainer(project.containerId);
-    if (!container) {
+    try {
+        container = docker.getContainer(project.containerId);
+    } catch (e) {
         return res.status(500).json({
             success: false,
             message: "Could not get project status",
@@ -404,7 +410,7 @@ const getProjectStatusHandler = async (req, res) => {
 
 const getContainerPortHandler = async (req, res) => {
     const { projectId } = req.params;
-    
+
     if (!projectId) {
         return res.status(400).json({
             success: false,

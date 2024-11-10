@@ -6,20 +6,20 @@ import Pusher from "pusher-js";
 import {
     ArrowLeft,
     Github,
-    Globe,
     Clock,
     GitBranch,
     Package,
     Server,
     Key,
     Play,
-    Stop,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import stripAnsi from "strip-ansi";
+import ObscureText from "@/components/custom/ObscureText";
 
 const authToken =
     typeof window !== "undefined" && localStorage.getItem("accessToken");
@@ -93,12 +93,24 @@ export default function ProjectDetails() {
 
         channel.bind("build", (data) => {
             console.log(data);
-            setBuildLogs((prevLogs) => [...prevLogs, data.message]);
+            setBuildLogs((prevLogs) => [
+                ...prevLogs,
+                data.message.replace(
+                    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+                    "",
+                ),
+            ]);
         });
 
         channel.bind("log", (data) => {
             console.log(data);
-            setLogs((prevLogs) => [...prevLogs, data.message]);
+            setLogs((prevLogs) => [
+                ...prevLogs,
+                data.message.replace(
+                    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+                    "",
+                ),
+            ]);
         });
     }, []);
 
@@ -181,6 +193,12 @@ export default function ProjectDetails() {
                 <p className="text-lg text-muted-foreground">
                     {projectData.description}
                 </p>
+                <a
+                    href={`http://localhost:${projectData.containerPort}/`}
+                    className="text-blue-500 flex flex-row"
+                >
+                    localhost:{projectData.containerPort}{" "}
+                </a>
             </div>
 
             {/* Project Details */}
@@ -270,27 +288,6 @@ export default function ProjectDetails() {
                 </Card>
             </div>
 
-            {/* Build Logs */}
-            <Card className="mt-6">
-                <CardHeader>
-                    <CardTitle>Build Logs</CardTitle>
-                </CardHeader>
-                <CardContent className="h-64 overflow-y-scroll">
-                    {buildLogs.length > 0 ? (
-                        buildLogs.map((log, index) => (
-                            <div key={index} className="text-sm text-blue-500">
-                                {log}
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-sm text-gray-500">
-                            No build logs available.
-                        </p>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Normal Logs */}
             <Card className="mt-6">
                 <CardHeader>
                     <CardTitle> Logs</CardTitle>
@@ -305,6 +302,50 @@ export default function ProjectDetails() {
                     ) : (
                         <p className="text-sm text-gray-500">
                             No logs available.
+                        </p>
+                    )}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Key className="w-5 h-5" />
+                        Environment Variables
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {projectData &&
+                    projectData.envSecrets &&
+                    projectData.envSecrets.length > 0 ? (
+                        <ul className="list-disc list-inside">
+                            {projectData.envSecrets.map((secret, index) => (
+                                <li key={index}>
+                                    {secret.key}:{" "}
+                                    <span>
+                                        <ObscureText text={secret.value} />
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>No environment variables set</p>
+                    )}
+                </CardContent>
+            </Card>
+            <Card className="mt-6">
+                <CardHeader>
+                    <CardTitle>Build Logs</CardTitle>
+                </CardHeader>
+                <CardContent className="h-64 overflow-y-scroll">
+                    {buildLogs.length > 0 ? (
+                        buildLogs.map((log, index) => (
+                            <div key={index} className="text-sm text-blue-500">
+                                {stripAnsi(log)}
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-sm text-gray-500">
+                            No build logs available.
                         </p>
                     )}
                 </CardContent>
